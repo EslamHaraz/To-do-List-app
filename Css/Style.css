@@ -1,0 +1,16 @@
+.ulLinks {
+    list-style: none;
+}
+.ulLinks li {
+        margin-bottom: 15px;
+        background-color: #bdbdbd;
+        width: 200px;
+        display: flex;
+        justify-content: space-around;
+        font-size: 20px;
+        text-transform: capitalize;
+}
+
+.ulLinks li button {
+    cursor: pointer;
+}

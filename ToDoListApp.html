@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./Css/Style.css"></link>
+    <link href="https://unpkg.com/todomvc-app-css@2.1.0/index.css" rel="stylesheet"/>
+
+    <title>Document</title>
+    
+</head>
+<body>
+
+    <!-- تقسيم المشروع -->
+    <!-- 1 Add Missions Done -->
+    <!-- 2 Toggle Completed Done -->
+    <!-- 3 Delete From Array Done  -->
+    <!-- 4 Delete The Completed Done -->
+    <!-- 5 Editing -->
+    <!-- 6 Filter Done  -->
+    <!-- 7 Finish All Done -->
+    <!-- 8 Storage The Data -->
+
+        <div id="app">
+
+
+        <!-- Enter Event -->
+        <!-- <input @keydown.enter="say" /> -->
+        <section class="todoapp">
+            <header class="header">
+              <h1 >todos</h1>
+              <input class="new-todo"
+                autocomplete="off"
+                placeholder="What needs to be done?" v-model="newMissons"@keydown.enter='AddToArray'>
+            </header>
+            <section class="main" >
+              <input class="toggle-all" id="toggle-all" type="checkbox" v-model="ComplateAll">
+              <label  for="toggle-all">Mark all as complete</label>
+              
+              <ul class="todo-list">
+                  <!-- سيتحقق الاستايل في حالة التروو فقط -->
+                <li class="todo" v-for="(miss,index) in filtered" 
+                :class="{completed:miss.done,editing: miss==editingTodo}">
+                  <div class="view">
+                    <input class="toggle" type="checkbox" v-model="miss.done">
+                    <label @dblclick="editTodo(miss)">{{miss.title}}</label>
+                    <button @click="deleteFromArray(index)" class="destroy"></button>
+                  </div>
+                  <input class="edit" type="text" 
+                  v-model="miss.title"
+                  @keydown.enter='editingTodo=null;miss.title===""?deleteFromArray(editingTodo):"";'
+                  @keyup.esc="cancelEditing()"
+                  >
+                </li>
+              </ul>
+            </section>
+            <footer class="footer">
+              <span class="todo-count">
+                <strong>{{remainingTodods}}</strong> {{remainingText}} left
+              </span>
+              <ul class="filters">
+                <li><a href="#" :class="{selected:visability=='all'}" @click.prevent="visability='all'">All</a></li>
+                <li><a href="#" :class="{selected:visability=='active'}"@click.prevent="visability='active'">Active</a></li>
+                <li><a href="#" :class="{selected:visability=='completed'}"@click.prevent="visability='completed'">Completed</a></li>
+              </ul>
+              <button @click="clearCompleted" class="clear-completed">
+                Clear completed
+              </button>
+            </footer>
+          </section>
+          <footer class="info">
+            <p>Double-click to edit a todo</p>
+          </footer>
+    </div>
+    <script src="./Vue/vue.js"></script>
+    <Script>
+        var Filters = {
+            'all':function(todos){
+                return todos
+            },
+            'active':function(todos){
+                return todos.filter((e)=>{
+                    return ! e.done
+                })
+            },
+            'completed':function(todos){
+                return todos.filter((e)=>{
+                    return  e.done
+                })
+            }
+        }
+        var todosStorage = {
+            fetchTodos:function(){
+            let todos = JSON.parse(window.localStorage.getItem("todo")|| '[]')
+            return todos
+            },
+            saveToLocalStorage:function(todos){
+                window.localStorage.setItem('todo',JSON.stringify(todos))
+            }
+        }
+        let vm = new Vue({
+            el:"#app",
+            data:{
+                todos:todosStorage.fetchTodos(),
+                messions:{miss:"dfsd",done:false,},
+                newMissons:"",
+                visability:"all",
+                editingTodo:null,
+                oldEditing:null,
+                cond1:0,
+                // لعمل تحقق علي خاصيع معينه مثل نوع البيانات او عمل فانكشن لعم حدث معين 
+                // في هذا الفاليدات كمنا بطلب نوع البيانات عباره عن ارقام 
+                // كمنا بأعطاء قيمه افتراضيه للخاصيه0 
+                // قمنا بعمل فانكشن ستعيد لنا القيمه في حاله كانت القيمه اكبر من صفر
+                // قمنا بجعل القيمه مطلوبه
+                cond:{required:true,type:Number,default:0,function(value){return value >0}},
+                //  هنا جعلنا نوع البيانات اكتر من نوع نمبر وا استرنج ويمكن استعمال ال اوبجيكت  
+                cond1:{required:true,type:[Number,String],default:0,function(value){return value >0}}
+
+            },
+            methods: {
+                say:function(){
+                    console.log("hello")
+                    console.log(Filters[this.visability]  (this.todos))
+                },
+                AddToArray:function(){
+                    this.newMissons===""?"":this.todos.push({'title':this.newMissons,done:false})
+                
+                    this.newMissons=""
+                },
+                deleteFromArray:function(index){
+              
+                    this.todos.splice(index,1)
+                },
+                clearCompleted:function(){
+                    this.todos = Filters.active(this.todos)
+                },
+                editTodo(miss){
+                    this.editingTodo=miss
+                    this.oldEditing= miss.title
+                },
+                cancelEditing(){
+                    this.editingTodo.title = this.oldEditing
+                    this.editingTodo=null
+                }
+            },
+            computed: {
+                remainingTodods:function(){
+                    return  Filters.active(this.todos).length 
+                },
+                remainingText:function(){
+                    if(Filters.active(this.todos).length>1){
+                        return `items`
+                    }else return `item`
+                },
+                filtered:function(){
+                    return Filters[this.visability] (this.todos)
+                },
+                ComplateAll:{
+                    get:function(){
+                        return  this.remainingTodods === 0
+                    },
+                    set:function(value){
+                        this.todos.forEach((todo)=>{
+                            todo.done = value
+                        })
+                    }
+                },
+            },
+            watch:{
+                todos:{
+                    handler:function(todos){
+                        todosStorage.saveToLocalStorage(todos)
+                    },
+                    deep:true
+                }
+            }
+        })
+    </Script>
+</body>
+</html>
